@@ -971,6 +971,8 @@ A - No, tbh I used a shortcut. Since I know the image probably won't be too smal
 
 ## Alternative methods
 
+### Move in-game camera method
+
 I've also seen other teams solve this by moving the game Camera.
 
 As seen above, the decrypted image is being casted to an object `dude2`. So, technically, we can use an invasive method to avoid the deobfuscating job.\
