@@ -899,6 +899,16 @@ IHDR  Ë  Ž   Ñ¬=   sRGB ®Îé   gAMA  ±
 
 That is a png format, we can write that into a file with a png extension
 
+*in case the b64decode you use is from online and the png data is corrupted somehow, here's a python script that saves your day (in conv.py)*
+
+```py
+from base64 import b64decode
+
+stuff = "{truncated b64 big mess here}"
+
+with open("dude.png", "wb") as f: f.write(b64decode(stuff))
+```
+
 ![output](extra_process/dude.png)
 
 finally, let's merge the 2 parts together
@@ -915,5 +925,5 @@ PUCTF25{This_game_is_so_fun_4bc69ccfb67906528c43a56b91dcc7d5}
 
 ## b64 GameObject where are you - checkpoint Q&A
 
-Q - did it take you long to find the GameObject that stores the b64 sequence?
+Q - did it take you long to find the GameObject that stores the b64 sequence?\
 A - No, tbh I used a shortcut. Since I know the image probably won't be too small, I sorted the MonoBehaviours and GameObjects in decending size order, and the top one is literally the PathID 34 `Text`
