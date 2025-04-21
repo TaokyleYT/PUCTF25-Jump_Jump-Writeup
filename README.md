@@ -964,6 +964,7 @@ A - MonoBehaviour, if I remembered correctly, is the substitution of a GameObjec
 
 Q - did it take you long to find the GameObject that stores the b64 sequence?\
 A - No, tbh I used a shortcut. Since I know the image probably won't be too small, I skipped Hierarchy and went straight to Asset List, sorted the MonoBehaviours and GameObjects in decending size order, and the top one is literally the PathID 34 `Text`, which is the MonoBehaviour storing the base64 we are looking for
+
 ![Sorted by decending size Asset List](img/AssetList.png)
 
 ## Alternative methods
