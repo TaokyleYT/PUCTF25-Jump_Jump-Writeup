@@ -276,7 +276,10 @@ internal sealed class <PrivateImplementationDetails>
 
 ## Deobfuscation
 
-Let's first take a look at this monstrosity
+Let's first take a look at this monstrosity in `player2`
+
+<details open>
+  <summary><b>Click to open/close this monstrosity</b></summary>
 
 ```cs
 using System;
@@ -594,16 +597,18 @@ public class player2 : MonoBehaviour
 }
 ```
 
+</details>
+
 this looks messy, let's try to rename and simplify it
 
 we can delete single return functions like
 
 ```cs
-    // Token: 0x06000023 RID: 35 RVA: 0x0000243E File Offset: 0x0000063E
-    private string tyg()
-    {
-        return "";
-    }
+// Token: 0x06000023 RID: 35 RVA: 0x0000243E File Offset: 0x0000063E
+private string tyg()
+{
+    return "";
+}
 ```
 
 and replace their references with the value they return
@@ -611,6 +616,9 @@ and replace their references with the value they return
 We can also try to rename the variables into their types\
 and delete functions with no references\
 which gives
+
+<details open>
+  <summary><b>Click to open/close this slightly optimised monstrosity</b></summary>
 
 ```cs
 using System;
@@ -752,6 +760,8 @@ public class player2 : MonoBehaviour
 }
 ```
 
+</details>
+
 some logic is very unnecesserary, for example, `if (1>0) {}` is always true, some variable is impossible to be null/false, some variables are unused, etc.
 
 By cleaning them up, you get
@@ -798,50 +808,45 @@ A - I didn't know what their uses are, so I just name them dudes since they're G
 
 so now all we need is the GameObject that stores a base64 encoded text, how?
 
-After using AssetStudio on the game, we can see there's a few GameObjects
+After using AssetStudio on the game, we can see all the GameObjects
 
 ![GameObjects](img/AssetStudio1.png)
 
-we noticed some interesting MonoBehaviour linked to a few GameObjects
+Let's see what MonoBehaviour is linked to the GameObjects
 
-First, all PathIDs of MonoBehaviours are 17, 18, 33, 34, 35, 36, and 11000
-
-in `flag`
+`flag` links to `player2`
 
 ```json
 {
-    "m_Components": [
-        {
-            "m_FileID": 0,
-            "m_PathID": 30,
-            "IsNull": false
-        },
-        {
-            "m_FileID": 0,
-            "m_PathID": 25,
-            "IsNull": false
-        },
-        {
-            "m_FileID": 0,
-            "m_PathID": 33,
-            "IsNull": false
-        },
-        {
-            "m_FileID": 0,
-            "m_PathID": 28,
-            "IsNull": false
-        }
-    ],
-    "m_Name": "flag",
-    ...
+  "m_GameObject": {
+    "m_FileID": 0,
+    "m_PathID": 1
+  },
+  "m_Enabled": 1,
+  "m_Script": {
+    "m_FileID": 1,
+    "m_PathID": 8
+  },
+  "m_Name": "",
+  "bnvr": {
+    "m_FileID": 0,
+    "m_PathID": 1
+  },
+  "bnvr2": {
+    "m_FileID": 0,
+    "m_PathID": 3
+  }
 }
 ```
 
-It points to MonoBehaviour ID 33, which is `player2`. neither does `flag` or `player2` contains m_Text, so we can assume flag is `dude2`
+Since `player2` doesn't contain m_Text, so we can assume flag is `dude2`
 
-in `Text`, it points to MonoBehaviour 17, which is `Text.cs`, no use.
+`MainCamera` doesn't point to any Monobehaviour
 
-in `a`, it points to MonoBehaviour 34, which is a MonoBehaviour also called `Text`.\
+`Platform` points to `Square` GameObject, and `Player` points to `Space` and `Circle` GameObject.\
+We can assume that they are the circle we are controlling and the platforms the circle is standing on.
+
+`a` links to `Text`.\
 Inside there lies
 
 ```json
@@ -886,14 +891,17 @@ Inside there lies
 }
 ```
 
-We found the GameObject `a` which contains `m_Text` (from a pointed MonoBehaviour `Text`), let's decrypt it.
+We found the GameObject `a` which contains `m_Text`, which is the `dude` we're searching for.\
+Let's decrypt it.
 
 ```
 ‰PNG
 
    
 IHDR  Ë  Ž   Ñ¬=   sRGB ®Îé   gAMA  ±
-...
+
+...{truncated}...
+
 ÿÒÿ9þÔ×ˆ¸    IEND®B`‚
 ```
 
@@ -925,5 +933,9 @@ PUCTF25{This_game_is_so_fun_4bc69ccfb67906528c43a56b91dcc7d5}
 
 ## b64 GameObject where are you - checkpoint Q&A
 
+Q - Isn't `Text` the one that contains `m_Text`? Why did you say it's `a` that have it?\
+A - MonoBehaviour, if I remembered correctly, is the substitution of a GameObject inside the code (That's why it's called MonoBehaviour, its the behaviour of one thing inside Mono (the code)). `Text` with PathID 34 is the Behaviour that `a` have in `player2` script as `dude`, that's why.
+
 Q - did it take you long to find the GameObject that stores the b64 sequence?\
-A - No, tbh I used a shortcut. Since I know the image probably won't be too small, I sorted the MonoBehaviours and GameObjects in decending size order, and the top one is literally the PathID 34 `Text`
+A - No, tbh I used a shortcut. Since I know the image probably won't be too small, I skipped Hierarchy and went straight to Asset List, sorted the MonoBehaviours and GameObjects in decending size order, and the top one is literally the PathID 34 `Text`, which is the MonoBehaviour storing the base64 we are looking for
+![Sorted by decending size Asset List](img/AssetList.png)
