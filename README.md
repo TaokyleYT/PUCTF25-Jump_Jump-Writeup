@@ -21,6 +21,8 @@ I created a simple game for you. Hope you don‘t break your spacebar. Have fun!
 Author: Paco\
 Flag Format: PUCTF25{[a-zA-Z0-9_]+_[a-fA-F0-9]{32}}
 
+Hint: N/A
+
 Attachments:
 Jump_Jump.zip
 (Stored at ./Jump_Jump.zip)
