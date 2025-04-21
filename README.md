@@ -1,11 +1,36 @@
 # Jump Jump - Writeup
 
+## Files related to solving the challenge are in extra_process folder
+
+The Beginning -> Jump_Jump\
+Crack it open -> N/A\
+Deobfuscation -> extra_process\
+b64 GameObject where are you -> extra_process
+
+
+## Please open issue should you have any questions. It will be added to the respective Q&A section.
+
+Author: S051_Destroy Lai Lai's Machine (aka DLLM)
+
+## Situation
+
+Jump Jump
+
+I created a simple game for you. Hope you don‘t break your spacebar. Have fun!!!
+
+Author: Paco\
+Flag Format: PUCTF25{[a-zA-Z0-9_]+_[a-fA-F0-9]{32}}
+
+Attachments:
+Jump_Jump.zip
+(Stored at ./Jump_Jump.zip)
+
 ## The Beginning
 
 After downloading and unzipping `Jump_Jump.zip`, we can see a file structure of
 
 ```tree
-C:.
+Jump_Jump
 │   Jump Jump.exe
 │   UnityCrashHandler64.exe
 │   UnityPlayer.dll
@@ -74,7 +99,7 @@ A - Because I can't think of any Q&A here
 I gave up after jumping for like 10 times, let's just crack the game open and save our time
 
 Good news is that this game uses mono and not il2cpp, so we have direct access to the dll\
-so we can just use dnSpy to load Assembly-CSharp.dll (the entry point of the game) and see what's inside
+so we can just use dnSpy to load `Assembly-CSharp.dll` (the entry point of the game) and see what's inside
 
 After loading it, we can see multiple scripts in the game
 
@@ -279,7 +304,7 @@ internal sealed class <PrivateImplementationDetails>
 Let's first take a look at this monstrosity in `player2`
 
 <details open>
-  <summary><b>Click to open/close this monstrosity</b></summary>
+  <summary><b>Click to open/close this monstrosity (also in extra_process/player2.cs)</b></summary>
 
 ```cs
 using System;
@@ -618,7 +643,7 @@ and delete functions with no references\
 which gives
 
 <details open>
-  <summary><b>Click to open/close this slightly optimised monstrosity</b></summary>
+  <summary><b>Click to open/close this slightly optimised monstrosity (also in extra_process/step1.cs)</b></summary>
 
 ```cs
 using System;
@@ -764,7 +789,8 @@ public class player2 : MonoBehaviour
 
 some logic is very unnecesserary, for example, `if (1>0) {}` is always true, some variable is impossible to be null/false, some variables are unused, etc.
 
-By cleaning them up, you get
+By cleaning them up, you get\
+(also in extra_process/step2.cs)
 
 ```cs
 using System;
@@ -907,7 +933,7 @@ IHDR  Ë  Ž   Ñ¬=   sRGB ®Îé   gAMA  ±
 
 That is a png format, we can write that into a file with a png extension
 
-*in case the b64decode you use is from online and the png data is corrupted somehow, here's a python script that saves your day (in conv.py)*
+*in case the b64decode you use is from online and the png data is corrupted somehow, here's a python script that saves your day (also in extra_process/conv.py)*
 
 ```py
 from base64 import b64decode
@@ -939,3 +965,126 @@ A - MonoBehaviour, if I remembered correctly, is the substitution of a GameObjec
 Q - did it take you long to find the GameObject that stores the b64 sequence?\
 A - No, tbh I used a shortcut. Since I know the image probably won't be too small, I skipped Hierarchy and went straight to Asset List, sorted the MonoBehaviours and GameObjects in decending size order, and the top one is literally the PathID 34 `Text`, which is the MonoBehaviour storing the base64 we are looking for
 ![Sorted by decending size Asset List](img/AssetList.png)
+
+## Alternative methods
+
+I've also seen other teams solve this by moving the game Camera.
+
+As seen above, the decrypted image is being casted to an object `dude2`. So, technically, we can use an invasive method to avoid the deobfuscating job.\
+Here's how to do it.
+
+First, go to playerscript after loading `Assembly-CSharp.dll` in dnSpy.
+(cropped from `Crack it open` sector)
+
+```cs
+using UnityEngine;
+
+// Token: 0x02000004 RID: 4
+public class playerscript : MonoBehaviour
+{
+    // Token: 0x06000028 RID: 40 RVA: 0x000024C0 File Offset: 0x000006C0
+    private void Start()
+    {
+        this.rb = base.GetComponent<Rigidbody2D>();
+        this.mainCamera = Camera.main;
+        if (this.mainCamera == null)
+        {
+            Debug.LogError("Main camera not found!");
+        }
+        this.lastPlatformPosition = base.transform.position + new Vector3(0f, -50f, 0f);
+        this.messages = new List<string>
+        {
+            "You're doing great!", "You know there is a flag at the end, right?", "You're almost there!", "You know there is 2 parts to the \nflag, right?",
+            ...
+            "The flag can be yours in a \ngoogolplexianth of a googolplexianth of a minute!", "HI!", "Hello!", "Greetings!", "Salutations!", "Howdy!", "Hey!", "Yo!", "Hi there!", "Hello there!", "Don't keep your flag!", "flag: PUCTF25{This_game_is_so_fun_....."
+        };
+        ...
+    }
+
+    ...
+}
+```
+
+we can see the Camera object is stored in `this.mainCamera`, which we can use this to change it's location and orintation later on
+
+we can then do some edit on the `Update()` method so that we can move the camera in game using keys
+
+```cs
+    // Token: 0x06000029 RID: 41 RVA: 0x00003D64 File Offset: 0x00001F64
+    private void Update()
+    {
+        if (this.rb.velocity.y == 0f)
+        {
+            this.isJumping = false;
+        }
+        if (Input.GetKeyDown(KeyCode.Space) && !this.isJumping)
+        {
+            this.Jump();
+            this.GeneratePlatform();
+            this.showFloatingText(this.messages[UnityEnging.Random.Range(0, UnityEngine.Random.Range(0, this.messages.Count))], 300);
+            this.jumpForce = 492f;
+        }
+        if (this.mainCamera != null)
+        {
+            float speed = 5f;
+
+            // this.mainCamera.transform.position = new Vector3(base.transform.position.x, base.transform.position.y, this.mainCamera.transform.position.z);
+
+            //arrow key to move direction
+            if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                this.mainCamera.transform.Rotate(Vector3.up, -1f);
+            }
+            if (Input.GetKey(KeyCode.RightArrow))
+            {
+                this.mainCamera.transform.Rotate(Vector3.up, 1f);
+            }
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                this.mainCamera.transform.Rotate(Vector3.right, 1f);
+            }
+            if (Input.GetKey(KeyCode.DownArrow))
+            {
+                this.mainCamera.transform.Rotate(Vector3.right, -1f);
+            }
+
+            // WASD to move location
+            if (Input.GetKey(KeyCode.W))
+            {
+                this.mainCamera.transform.Translate(Vector3.forward * speed * Time.deltaTime);
+            }
+            if (Input.GetKey(KeyCode.S))
+            {
+                this.mainCamera.transform.Translate(Vector3.back * speed * Time.deltaTime);
+            }
+            if (Input.GetKey(KeyCode.A))
+            {
+                this.mainCamera.transform.Translate(Vector3.left * speed * Time.deltaTime);
+            }
+            if (Input.GetKey(KeyCode.D))
+            {
+                this.mainCamera.transform.Translate(Vector3.right * speed * Time.deltaTime);
+            }
+        }
+    }
+
+```
+
+To edit a method in dnSpy, you can click anywhere inside the method and then right click, then choose `Edit Method`\
+Then, after doing changes, click `Compile`. Finally, go to `file -> Save Module` and then `ok` to apply changes
+(modified playerscript is at `extra_process/playerscript.cs` and compiled dll of that is at `extra_process/Assembly-CSharp.dll`)
+
+![Edit Method](img/EditMethod.png)
+
+Here is the second half of the flag by moving the camera
+
+![Alt Method video](img/AltMethod.gif)
+
+## Alternative methods - checkpoint Q&A
+
+Q - where did you see the 'move camera' method?\
+A - I saw it in the reply section of Jump_Jump in the ctf discord write-up-25 section
+
+Q - did you copy them?\
+A - Copy the idea? Yes, because I didn't know until they tell me about this idea.\
+Copy the method to do so? No, I attempted to solve this again by moving the camera, the code above is modified by me
